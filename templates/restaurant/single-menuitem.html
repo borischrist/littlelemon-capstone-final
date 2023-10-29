@@ -1,0 +1,24 @@
+{% load static %}
+<div class="menuitem-element" id="menuitem-{{menuitem.id}}">
+    {% if menuitem.inventory < 1 %}
+    <span class="item_exhausted">EXHAUSTED</span>
+    {% elif menuitem.inventory < 5 %}
+    <span class="item_exhausted">ONLY {{menuitem.inventory}} ITEMS LEFT!</span>
+    {% endif %}
+
+    <h2 id="menuitem-name">{{menuitem.name}}</h2>
+
+    <p class="category_name">{{menuitem.category}}</p>
+    {% if menuitem.photo %}
+    <img src="/media/{{menuitem.photo}}">
+    {% else %}
+    <img src="{% static 'restaurant/noimg.png' %}">
+    {% endif %}
+    <p class="menuitem-price">${{menuitem.price}}</p>
+
+    
+</div>
+
+{% if redirectOnDelete %}
+    {% include 'restaurant/single-menuitem-edit.html' %}
+{% endif %}

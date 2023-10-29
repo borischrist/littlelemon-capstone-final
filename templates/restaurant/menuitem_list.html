@@ -1,0 +1,16 @@
+{% extends 'restaurant/base.html' %}
+{% load static %}
+
+{% block main %}
+<div class="center_main">
+    <h1>Our Menu</h1>
+
+    <div class="menuitems">
+    {% for menuitem in object_list %}
+        {% include 'restaurant/single-menuitem.html' %}
+    {% empty %}
+        No menu items yet.
+    {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends 'restaurant/base.html' %}
+
+{% block main %}
+    {% if request.GET.msg == "SIGNUPOK" %}
+    You where correctly registered to littlelemon!<hr/>
+    {% endif %}
+    Welcome to littlelemon's website!
+{% endblock %}

@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="author" content="{{conf.AUTHOR}}">
+        <title>{{page_title}} - LittleLemon</title>
+        <link rel="stylesheet" href="{% static 'restaurant/style.css' %}">
+        <link rel="icon" href="{% static 'littlelemon/icon.ico' %}" type="image/x-icon">
+        <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet'>
+        {% block extraheaders %}
+        {% endblock %}
+    </head>
+
+    <body>
+        <div class="body-container">
+            <header>
+                <a href="{% url 'restaurant:home'%}">
+                    <img src="{% static 'restaurant/download.png' %}"/>
+                </a>
+            </header>
+
+            <nav>
+                <a href="{% url 'restaurant:home' %}">Home</a>| 
+                <a href="{% url 'restaurant:menu' %}">Menu</a> |
+                <a href="{% url 'restaurant:book' %}">Booking</a> | 
+                <a href="{% url 'restaurant:contact' %}">Contact us</a> | 
+                <a href="{% url 'restaurant:about' %}">About us</a> 
+                {% if user.is_superuser %}
+                | <a style="color:red; font-weight:bold;" href="{% url 'restaurant:api:home' %}">API</a>
+                | <a style="color:green; font-weight:bold;" href="/admin">Admin</a>
+                {% endif %} 
+            </nav>
+
+            <div class="userbox">
+                {% if user.is_authenticated %}
+                <div style="display:flex">
+                    {% if not user.pic %}
+                    <img src="{% static 'restaurant/user.png' %}"/>
+                    {% else %}
+                    <img src="/media/{{ user.pic }}"/>
+                    {% endif %}
+                    &nbsp;&nbsp;{{ user.username }}
+                </div>
+                <div style="display:flex">
+                    <a href="/accounts/logout/" class="small">logout</a>
+                </div>
+                {% else %}
+                <a href="/accounts/signup/">sign up</a><br>
+                <a href="/accounts/login/" class="medium">(already have an account? <strong>log in</strong>)</a>
+                {% endif %}
+            </div>
+{{hola}}
+            <main>
+                {{message}}
+                {% block main %}
+                test
+                {% endblock main %}
+            </main>
+
+            <footer>
+                copyright whatever tm (c) 2023 boris christ
+            </footer>
+        </div>
+    </body>
+</html>

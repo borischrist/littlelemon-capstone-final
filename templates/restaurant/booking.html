@@ -1,0 +1,198 @@
+{% extends 'restaurant/base.html' %}
+
+{% block main %}
+<div class="booking-container">
+    <div class="booking-form">
+        <form method="POST" action="" id="booking-form">
+            {% csrf_token %}
+            {{form.as_p}}
+            <button type="submit">Add Reservation</button>
+        </form>
+    </div>
+
+
+    <div class="booking-hours" id="booking-hours" style="display:none;">
+        <h3>Hours available for <span id="booking-hours-date"></span>:</h3>
+        <p id="booking-hours-p"></p>
+    </div>
+</div>
+
+<script type="text/javascript"> 
+    userisstaff = false;
+    {% if user.is_staff %}
+    userisstaff = true;
+    {% endif %}
+
+    const today = new Date();
+    today.setHours(0,0,0,0);    
+
+    form = document.getElementById("booking-form");
+    hours = document.getElementById("booking-hours");
+    hoursP = document.getElementById("booking-hours-p");
+    input_date = document.getElementById("id_date");
+    input_hour = document.getElementById("id_hour");
+
+    csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+
+    error = document.createElement("span");
+    error.setAttribute("class", "error-form");
+    error.setAttribute("style", "display: none");
+
+    input_date.parentNode.insertBefore(error, input_date.nextSibling);
+
+    var current_hours;
+
+    function formatHours(data) {
+        //we transform the data from hours into an array that states which hours are available
+        data = data.results;
+        console.log(data);
+        s = [];
+        for(i = 0; i <= 22; i++) {
+            s[i] = true;
+        }
+        for(i = 0; i < data.length; i++) {
+            s[data[i].hour] = false;
+        }
+
+        allfalse = true;
+        for(i = 8; i <= 22; i++) {
+            if(s[i] == true) {
+                allfalse = false;
+            }
+        }
+
+        console.log(s);
+        if(allfalse) {
+            return false;
+        }
+        else {
+            return s;
+        }
+    }
+    function updateAvailableHours() {
+        console.log(input_date.value);
+        fetch('api/booking?date='+input_date.value, {
+            method:'GET',
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("data:");
+            console.log(data);
+            s = formatHours(data);
+
+            if(!s) {
+                //there is no hour available
+                hoursP.innerHTML = "There is no hour available for this date."
+            }
+            else {
+                hoursP.innerHTML = "";
+                for(i=8; i<=22; i++) {
+                    if(s[i])
+                        hoursP.innerHTML += 
+                        '<span style="cursor:pointer;" onclick="input_hour.value = '+i+';">'+i+':00 free<br/></span>';
+                    else {
+                        hoursP.innerHTML += "<s>"+i+":00 taken</s>";
+                        if(userisstaff) {
+                            results = data.results
+                            for(const element of results) {
+                                if(element['hour'] == i) {
+                                    thisclient = element['client']==null ? null : element['client']['username'];
+                                    hoursP.innerHTML += " (reserved by <i>"+thisclient+"</i>)";
+                                }
+                            }  
+                        }
+                        hoursP.innerHTML += "<br/>";
+                    }
+                       
+                }
+                current_hours = s;
+            }
+        })
+        .catch(error => console.log(error));
+    }
+    function checkDate(date) {
+        date = new Date([date, "00:00"]);
+        return (date >= today)
+    }
+    async function onSubmit(event) {
+        event.preventDefault();
+        if(!checkDate(input_date.value)) {
+            alert("Please enter a correct date.");
+        } else {
+            s = Number(input_hour.value);
+            if(s < 8 || s > 22) {
+                alert("Hour is incorrect, must be between 8:00 and 22:00");
+            } else if(!current_hours[s]) {
+                alert("This hour is taken.");
+            } else {
+                // const formdata = new FormData(form);
+                // var object = {};
+                // formdata.forEach(function(value,key){
+                // object[key] = value});
+                // console.log(Array.from(formdata));
+                // console.log(object);    
+                // csrfcookie = getCookie('csrftoken');
+                // console.log("asdadad-"+csrfcookie);
+
+                // fetch('/api/booking/', {
+                //     method: 'POST',
+                //     headers: {
+                //         "X-CSRF-Token":csrfcookie,
+                //         "Content-Type": "application/json"
+                //     },
+                //     credentials: "same-origin",
+                //     body: JSON.stringify(object)
+                // })
+                // .then(res => res.json())
+                // .then(data => {
+                //     console.log(data)
+                //     // alert("Succesfully booked!");
+                //     updateAvailableHours();
+                // });
+
+
+                console.log("TEST");
+                const url = '/api/booking/create/';
+                const formData = new FormData(form);
+            
+                const res = await fetch(url, { 
+                    method: "POST", 
+                    body: formData 
+                });
+
+                if (res.status === 201) {
+                    console.log('Booking successfully created!');
+                    updateAvailableHours();
+                }
+                else if (res.status === 403) {
+                    error.removeAttribute("style");
+                    error.innerHTML = "&nbsp;please login to book.";
+                }
+                
+            }
+        }
+    }
+    function onDateChange(event) {
+        if(!checkDate(input_date.value)) {
+            error.removeAttribute("style");
+            error.innerHTML = "&nbsp;enter a correct date";
+            hours.setAttribute("style", "display:none");
+        }
+        else {
+            error.setAttribute("style", "display:none");
+            hours.setAttribute("style", "");
+        }
+        document.getElementById("booking-hours-date").innerHTML = input_date.value;
+        
+        p = document.getElementById("booking-hours-p");
+
+        updateAvailableHours();
+    }
+    
+    form.addEventListener("submit", onSubmit);
+    input_date.addEventListener("change", onDateChange);
+
+    input_date.value = today.toISOString().split('T')[0];
+    onDateChange(null);
+</script>
+{% endblock %}
